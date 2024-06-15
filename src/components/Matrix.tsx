@@ -208,7 +208,7 @@ export const Matrix = (props: MatrixProps) => {
   }
 
   return (
-    <div className="matrix w-fit mx-auto flex flex-col gap-y-1 row-start-2 row-end-3 col-span-1 max-sm:row-start-2 max-sm:row-end-3 max-sm:col-span-3">
+    <div className="matrix w-fit mx-auto flex flex-col gap-y-1 row-start-1 row-end-3 col-span-1 max-sm:row-start-2 max-sm:row-end-3 max-sm:col-span-3">
       {matrix.map((row, i) => (
         <div key={i} className="flex gap-x-1">
           {row.map((flag, j) => (
