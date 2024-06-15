@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import './app.css'
+import './App.css'
 import { Matrix, MatrixProps } from './components/Matrix'
 import { ITetrimino, T, Z, S, J, L, I, O } from './components/Tetrimino'
 import { v4 as uuidv4 } from 'uuid'
