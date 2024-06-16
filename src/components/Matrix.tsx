@@ -15,6 +15,7 @@ export interface MatrixProps {
 export const Matrix = (props: MatrixProps) => {
   // width x height Miro board
   const {width, height, patterns, func, scoreFunc, matrix, setMatrix} = props;
+  
   const [counter, setCounter] = useState(0);
   const [score, setScore] = useState(width * height);
   // 4つのMinoの座標を保持する

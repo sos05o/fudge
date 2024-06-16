@@ -12,20 +12,28 @@ const generateUUIDv4 = (): string => {
 
 const X = 10
 const Y = 14
+const mobileWidth = [640]
 const themes = ["coffee", "retro", "cyberpunk", "graden", "aqua", "dark", "cmyk"]
 
 export const App = () => {
+  const [deviceSize, setDeviceSize] = useState<[number, number]>([0, 0])
   const [theme, setTheme] = useState<string>(themes[0])
   const [themeBtns, setThemeBtns] = useState<boolean>(false)
   const [mode, setMode] = useState<number>(0)
-  const [score, setScore] = useState<number>(X * Y)
+  const [score, setScore] = useState<number>(deviceSize[0] < mobileWidth[0] ? 6 * 10 : X * Y)
   const tetriminos: ITetrimino[] = [T, Z, S, J, L, I, O]
   const [patterns, setPatterns] = useState<[{ id: string, pattern: ITetrimino }] | []>([])
-  const [matrix, setMatrix] = useState(Array.from({ length: Y }, () => Array.from({ length: X }, () => true)))
+  const [matrix, setMatrix] = useState(Array.from({ length: deviceSize[0] < mobileWidth[0] ? 10 : Y }, () => Array.from({ length: deviceSize[0] < mobileWidth[0] ? 6 : X }, () => true)))
 
   useEffect(() => {
     shufflePattern()
+    setDeviceSize([window.innerWidth, window.innerHeight])
   }, [])
+
+  useEffect(() => {
+    // mode変更時にpatternsをシャッフル
+    shufflePattern()
+  }, [mode])
 
   const changeMode = (mode: number) => {
     setMode(mode)
@@ -62,8 +70,8 @@ export const App = () => {
     const newMatrix = deepCopy(matrix)
     const penalty = Math.floor(Math.random() * 4) + 1
     let keep = []
-    for (let r = 0; r < Y; r++) {
-      for (let c = 0; c < X; c++) {
+    for (let r = 0; r < (deviceSize[0] < mobileWidth[0] ? 10 : Y); r++) {
+      for (let c = 0; c <  (deviceSize[0] < mobileWidth[0] ? 6 : X); c++) {
         if (matrix[r][c] === false) {
           // 上に隣接するtrueがある場合のみ、trueに変更する
           if (r > 0 && matrix[r - 1][c] === true) {
@@ -110,9 +118,12 @@ export const App = () => {
     setPatterns([...newPatterns, newPattern])
   }
 
+  console.log(deviceSize);
+  
   const regularProps: MatrixProps = {
-    width: X,
-    height: Y,
+    width: deviceSize[0] < mobileWidth[0] ? 6 : X,
+    height: deviceSize[0] < mobileWidth[0] ? 10 : Y,
+    // mobileSizeとdeviceSizeを比較して、deviceSizeが小さい場合は
     patterns: patterns,
     func: removePattern,
     scoreFunc: refleshScore,
@@ -154,8 +165,8 @@ export const App = () => {
             {patterns.length > 0 && (
               <div className="flex flex-col gap-y-4 max-sm:gap-y-6 mb-6 max-sm:flex-row max-sm:row-start-2 max-sm:row-end-3 max-sm:col-start-1 max-sm:col-end-4 justify-center sm:justify-start">
                 <AnimatePresence mode={"popLayout"} initial={false}>
-                  {patterns.map((pt, index) => (
-                    <motion.div key={pt.id} initial={{ opacity: 0, rotate: 0 }} transition={{ duration: 0.64, ease: "easeInOut" }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -50 }}>
+                  {patterns.map((pt) => (
+                    <motion.div key={pt.id} initial={{ opacity: 0, scale: deviceSize[0] < mobileWidth[0] ? 0.9 : 0.8, y: 50 }} transition={{ duration: 0.64, ease: "easeInOut" }} animate={{ opacity: 1, scale: deviceSize[0] < mobileWidth[0] ? 0.9 : 0.8, y: 0}} exit={{ opacity: 0, y: 70 }}>
                       <div className="flex flex-col gap-y-1 swap">
                         <PatternView key={pt.id} pattern={pt.pattern} id={pt.id} />
                       </div>
@@ -173,11 +184,11 @@ export const App = () => {
           </div>
         </div>
         <Matrix {...regularProps} />
-        <div className="mx-auto row-start-1 row-end-2 max-sm:row-start-3 max-sm:row-end-4 col-start-3 col-end-4 max-sm:col-span-3 text-center py-6 px-4 border-2 glass rounded-btn">
+        <div className="mx-auto row-start-1 row-end-2 max-sm:row-start-3 max-sm:row-end-4 col-start-3 col-end-4 max-sm:col-span-3 text-center content-center py-6 px-4 border-2 glass rounded-btn">
           <h1 className="text-xl font-bold text-warning">最小ブロック数</h1>
           <p className="text-4xl font-bold text-warning">{score}</p>
         </div>
-        <div className="mx-auto row-start-2 row-end-3 max-sm:row-start-4 max-sm:row-end-5 col-start-3 col-end-4 max-sm:col-span-3">
+        <div className="max-sm:mx-auto mx-12 row-start-2 row-end-3 max-sm:row-start-4 max-sm:row-end-5 col-start-3 col-end-4 max-sm:col-span-3">
           <div className="mx-auto w-full sm:w-full max-sm:mx-6 text-center text-2xl font-bold py-6 px-5 glass rounded-btn">
             これは<a href="https://vividfax.itch.io/fudge" className="text-link text-underline">Fudge</a>を参考にしたゲームです。
             <div className="font-normal">
@@ -204,6 +215,7 @@ const PatternView = (props: { pattern: ITetrimino, id: string }) => {
   const pt = props.pattern;
   const id = props.id;
   const { direction, pattern, lock } = pt;
+  const [localDirection, setLocalDirection] = useState<number>(direction);
   // 4x4のMinoスペースを作成し、patternの座標の位置のMinoのデザインを変える
   let minoSpace = Array.from({ length: 4 }, () => Array.from({ length: 4 }, () => 0));
   // patternの座標の位置にMinoを配置する
@@ -213,15 +225,22 @@ const PatternView = (props: { pattern: ITetrimino, id: string }) => {
     minoSpace[y][x] = 1;
   })
 
+  const rotate = () => {
+    if (!lock) {
+      pt.rotate();
+      setLocalDirection(pt.direction);
+    }
+  }
+
   return (
-    <>
+    <span className={`transform: rotate(${localDirection * 90}deg)`} onClick={rotate}>
       {minoSpace.map((row, y) => (
         <div key={y} className="flex gap-x-1">
           {row.map((col, x) => (
-            <button key={x} className={`btn btn-square sm:btn-sm max-sm:btn-xs btn-glass select-none cursor-pointer ${col === 1 ? 'btn-secondary' : 'btn-link'}`}></button>
+            <button key={x} className={`btn btn-square sm:btn-sm max-sm:btn-xs btn-success select-none cursor-pointer ${col === 1 ? 'btn-secondary' : 'btn-link'}`}></button>
           ))}
         </div>
       ))}
-    </>
+    </span>
   )
 };
