@@ -20,14 +20,19 @@ export const App = () => {
   const [theme, setTheme] = useState<string>(themes[0])
   const [themeBtns, setThemeBtns] = useState<boolean>(false)
   const [mode, setMode] = useState<number>(0)
-  const [score, setScore] = useState<number>(deviceSize[0] < mobileWidth[0] ? 6 * 10 : X * Y)
+  const [score, setScore] = useState<number>(deviceSize[0] < mobileWidth[0] ? 6 * 8 : X * Y)
   const tetriminos: ITetrimino[] = [T, Z, S, J, L, I, O]
   const [patterns, setPatterns] = useState<[{ id: string, pattern: ITetrimino }] | []>([])
-  const [matrix, setMatrix] = useState(Array.from({ length: deviceSize[0] < mobileWidth[0] ? 10 : Y }, () => Array.from({ length: deviceSize[0] < mobileWidth[0] ? 6 : X }, () => true)))
+  const [matrix, setMatrix] = useState(Array.from({ length: deviceSize[0] < mobileWidth[0] ? 8 : Y }, () => Array.from({ length: deviceSize[0] < mobileWidth[0] ? 6 : X }, () => true)))
 
   useEffect(() => {
+    const w = window.innerWidth
+    const h = window.innerHeight
     shufflePattern()
-    setDeviceSize([window.innerWidth, window.innerHeight])
+    setDeviceSize([w, h])
+    console.log(`width: ${w}, height: ${h}, dev < mob: ${w < mobileWidth[0]}`);
+    
+    setMatrix(Array.from({ length: w < mobileWidth[0] ? 8 : Y }, () => Array.from({ length: w < mobileWidth[0] ? 6 : X }, () => true)))
   }, [])
 
   useEffect(() => {
@@ -70,7 +75,7 @@ export const App = () => {
     const newMatrix = deepCopy(matrix)
     const penalty = Math.floor(Math.random() * 4) + 1
     let keep = []
-    for (let r = 0; r < (deviceSize[0] < mobileWidth[0] ? 10 : Y); r++) {
+    for (let r = 0; r < (deviceSize[0] < mobileWidth[0] ? 8 : Y); r++) {
       for (let c = 0; c <  (deviceSize[0] < mobileWidth[0] ? 6 : X); c++) {
         if (matrix[r][c] === false) {
           // 上に隣接するtrueがある場合のみ、trueに変更する
@@ -117,12 +122,10 @@ export const App = () => {
     const newPattern = generatePattern()
     setPatterns([...newPatterns, newPattern])
   }
-
-  console.log(deviceSize);
   
   const regularProps: MatrixProps = {
     width: deviceSize[0] < mobileWidth[0] ? 6 : X,
-    height: deviceSize[0] < mobileWidth[0] ? 10 : Y,
+    height: deviceSize[0] < mobileWidth[0] ? 8 : Y,
     // mobileSizeとdeviceSizeを比較して、deviceSizeが小さい場合は
     patterns: patterns,
     func: removePattern,
