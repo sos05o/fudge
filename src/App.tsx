@@ -30,8 +30,7 @@ export const App = () => {
     const h = window.innerHeight
     shufflePattern()
     setDeviceSize([w, h])
-    console.log(`width: ${w}, height: ${h}, dev < mob: ${w < mobileWidth[0]}`);
-    
+    setScore(w < mobileWidth[0] ? 6 * 8 : X * Y)
     setMatrix(Array.from({ length: w < mobileWidth[0] ? 8 : Y }, () => Array.from({ length: w < mobileWidth[0] ? 6 : X }, () => true)))
   }, [])
 
